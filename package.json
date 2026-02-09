@@ -1,0 +1,22 @@
+{
+  "name": "neocortica",
+  "version": "1.0.0",
+  "description": "NEOCORTICA AI Deep Research Tools",
+  "type": "module",
+  "scripts": {
+    "test": "npx tsx test/arxiv.test.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^25.2.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.4",
+    "fast-xml-parser": "^5.3.5",
+    "openai": "^6.18.0"
+  }
+}

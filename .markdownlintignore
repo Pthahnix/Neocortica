@@ -1,0 +1,13 @@
+<!-- markdownlint-disable -->
+
+# Ignore build output
+build/
+
+# Ignore node_modules
+node_modules/
+
+# Ignore folders starting with a dot
+.*/
+
+# Ignore papers
+paper/

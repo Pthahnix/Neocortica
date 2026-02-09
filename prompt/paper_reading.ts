@@ -1,0 +1,12 @@
+// prompt/paper_reading.ts — load paper reading prompts from markdown files
+
+import { readFileSync } from 'fs';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
+const PROMPT_DIR: string = dirname(fileURLToPath(import.meta.url));
+
+export const paperReadingSystem: string = readFileSync(join(PROMPT_DIR, 'paper_reading_system.md'), 'utf-8');
+export const paperReading00:     string = readFileSync(join(PROMPT_DIR, 'paper_reading_00.md'), 'utf-8');
+export const paperReading01:     string = readFileSync(join(PROMPT_DIR, 'paper_reading_01.md'), 'utf-8');
+export const paperReading02:     string = readFileSync(join(PROMPT_DIR, 'paper_reading_02.md'), 'utf-8');
