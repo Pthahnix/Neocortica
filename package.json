@@ -15,6 +15,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "dotenv": "^17.2.4",
     "fast-xml-parser": "^5.3.5",
     "openai": "^6.18.0"
