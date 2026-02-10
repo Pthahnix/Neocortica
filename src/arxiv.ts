@@ -14,7 +14,7 @@ const ARXIV2MD_API_URL: string = process.env['BASE_URL_ARXIV2MD'] ?? 'https://ar
 const ARXIV_ID_PATTERN: RegExp = /^\d{4}\.\d{4,5}(v\d+)?$/;
 const ARXIV_URL_PATTERN: RegExp = /^https?:\/\/arxiv\.org\/abs\/(\d{4}\.\d{4,5}(v\d+)?)$/;
 
-const PAPER_DIR: string = 'paper';
+const PAPER_DIR: string = '.paper';
 
 // ── Types ────────────────────────────────────────────────────────────
 
