@@ -1,27 +1,58 @@
-import { loadPaper } from './src/arxiv.ts';
-import { BasicLLM } from './src/basic_llm.ts';
+import { PaperSearcher } from './src/arxiv.ts';
 
-// ── Step 1: Load paper markdown ─────────────────────────────────────
-const markdown: string = await loadPaper('2406.14491');
-console.log(`Paper loaded: ${markdown.length} chars\n`);
+const searcher = new PaperSearcher();
 
-// ── Step 2: Send to BasicLLM for reading ────────────────────────────
-const llm = new BasicLLM({
-  baseUrl:   process.env['BASE_URL_OPENROUTER']!,
-  apiKey:    process.env['API_KEY_OPENROUTER']!,
-  modelName: 'openai/gpt-oss-120b',
-  systemPrompt: 'You are a helpful assistant. Read the paper provided by the user and give a concise summary.',
+// ── Helper ───────────────────────────────────────────────────────────
+
+async function run(label: string, input: { title: any, id: any, url: any }) {
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`  ${label}`);
+  console.log(`${'='.repeat(60)}`);
+  console.log('input:', JSON.stringify(input));
+
+  const ctx: any = {
+    paperTitle: input.title ?? '',
+    paperId:    input.id    ?? '',
+    paperUrl:   input.url   ?? '',
+  };
+
+  ctx.paperId    = searcher.paperId(ctx);
+  console.log('paperId:   ', ctx.paperId);
+
+  ctx.paperTitle = await searcher.paperTitle(ctx);
+  console.log('paperTitle:', ctx.paperTitle);
+
+  ctx.paperUrl   = searcher.paperUrl(ctx);
+  console.log('paperUrl:  ', ctx.paperUrl);
+
+  ctx.paperFile  = searcher.paperFile(ctx);
+  console.log('paperFile: ', ctx.paperFile);
+
+  ctx.paperMd    = await searcher.paperMd(ctx);
+  console.log('paperMd:   ', ctx.paperMd.length, 'chars');
+
+  // final context
+  const output = { title: ctx.paperTitle, url: ctx.paperUrl, markdown: ctx.paperMd };
+  console.log('\n--- output context ---');
+  console.log('title:   ', output.title);
+  console.log('url:     ', output.url);
+  console.log('markdown:', output.markdown.length, 'chars');
+}
+
+// ── Test 1: Human (id only) ─────────────────────────────────────────
+
+await run('Human: id = 2205.14135', {
+  title: null,
+  id: '2205.14135',
+  url: null,
 });
 
-console.log('Sending markdown to LLM...\n');
-const completion = await llm.call(markdown);
+// ── Test 2: APIFY (title + url) ─────────────────────────────────────
 
-const content = completion.choices[0]?.message?.content ?? '(no content)';
-console.log('=== LLM Response ===\n');
-console.log(content);
-console.log('\n=== Token Usage ===');
-console.log(`  prompt:     ${completion.usage?.prompt_tokens}`);
-console.log(`  completion: ${completion.usage?.completion_tokens}`);
-console.log(`  total:      ${completion.usage?.total_tokens}`);
+await run('APIFY: title + url', {
+  title: 'Training Large Language Models to Reason in a Continuous Latent Space',
+  id: null,
+  url: 'https://arxiv.org/abs/2412.06769',
+});
 
 // npx tsx test.ts
