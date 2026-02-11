@@ -1,4 +1,5 @@
 # Folders starting with a dot.
+.claude/settings.local.json
 .code/
 .context/
 .git/
