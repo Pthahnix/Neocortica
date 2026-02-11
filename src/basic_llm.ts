@@ -30,29 +30,19 @@ export class BasicLLM {
   }
 
   async call(userInput: string): Promise<ChatCompletion> {
-    // Format user content: apply prompt template if present
-    const userContent: string = this.promptTemplate
+    const userContent = this.promptTemplate
       ? this.promptTemplate.replace('{userInput}', userInput)
       : userInput;
 
-    return this.sendToLLM(userContent);
-  }
-
-  /** Send pre-formatted content directly to the LLM (no template applied). */
-  protected async sendToLLM(userContent: string): Promise<ChatCompletion> {
-    // Build messages array
     const messages: ChatCompletionMessageParam[] = [];
     if (this.systemPrompt) {
       messages.push({ role: 'system', content: this.systemPrompt });
     }
     messages.push({ role: 'user', content: userContent });
 
-    // Call LLM
-    const completion: ChatCompletion = await this.client.chat.completions.create({
+    return this.client.chat.completions.create({
       model:    this.modelName,
-      messages: messages,
+      messages,
     });
-
-    return completion;
   }
 }

@@ -2,7 +2,7 @@
 
 import 'dotenv/config';
 import { readFile, writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { XMLParser } from 'fast-xml-parser';
 
@@ -12,7 +12,7 @@ const ARXIV_ABS_URL    = 'https://arxiv.org/abs/';
 const ARXIV_API_URL    = process.env['BASE_URL_ARXIV']    ?? 'http://export.arxiv.org/api/query';
 const ARXIV2MD_API_URL = process.env['BASE_URL_ARXIV2MD'] ?? 'https://arxiv2md.org/api/ingest';
 const ARXIV_URL_RE     = /^https?:\/\/arxiv\.org\/abs\/(\d{4}\.\d{4,5}(v\d+)?)$/;
-const PAPER_DIR        = '.paper';
+const PAPER_DIR        = process.env['PAPER_CACHE'] ?? '.paper';
 
 // ── PaperSearcher ───────────────────────────────────────────────────
 
@@ -37,6 +37,16 @@ export class PaperSearcher {
 
   async paperTitle(ctx: { paperTitle: string, paperId: string, paperUrl: string }): Promise<string> {
     if (ctx.paperTitle) return ctx.paperTitle;
+    // check local cache: find {id}-*.md in PAPER_DIR, read title from first line
+    if (ctx.paperId && existsSync(PAPER_DIR)) {
+      const prefix = ctx.paperId + '-';
+      const hit = readdirSync(PAPER_DIR).find(f => f.startsWith(prefix) && f.endsWith('.md'));
+      if (hit) {
+        const firstLine = readFileSync(join(PAPER_DIR, hit), 'utf-8').split('\n', 1)[0];
+        if (firstLine.startsWith('# ')) return firstLine.slice(2).trim();
+      }
+    }
+    // fallback: arXiv API
     const params = new URLSearchParams({ id_list: ctx.paperId });
     const resp = await fetch(`${ARXIV_API_URL}?${params}`);
     if (!resp.ok) throw new Error(`arXiv API ${resp.status}`);

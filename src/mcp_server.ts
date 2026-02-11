@@ -6,12 +6,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { PaperSearcher } from './arxiv.ts';
 import { PaperReader } from './paper_reader.ts';
-import {
-  paperReadingSystem,
-  paperReading00,
-  paperReading01,
-  paperReading02,
-} from '../prompt/paper_reading.ts';
+import { paperReadingSystem } from '../prompt/paper_reading.ts';
 
 // ── Redirect console.log to stderr (stdio transport uses stdout) ────
 
@@ -22,13 +17,12 @@ console.log = console.error;
 
 const searcher = new PaperSearcher();
 
-function makeReader(systemPrompt: string, promptTemplate?: string) {
+function makeReader(systemPrompt: string) {
   return new PaperReader({
     baseUrl:   process.env['BASE_URL_OPENROUTER']!,
     apiKey:    process.env['API_KEY_OPENROUTER']!,
     modelName: process.env['MODEL_NAME']!,
     systemPrompt,
-    promptTemplate,
   });
 }
 
@@ -90,7 +84,7 @@ server.tool(
 
 server.tool(
   'paper_reading',
-  'Read an arXiv paper with AI and return structured analysis (3-step: Quick Scan → Deep Dive → Critical Thinking). Optionally provide a custom prompt for freeform reading.',
+  'Read an arXiv paper with AI and return structured analysis. Optionally provide a custom prompt for freeform reading.',
   {
     id:     z.string().optional().describe('arXiv ID, e.g. "2205.14135"'),
     url:    z.string().optional().describe('arXiv URL, e.g. "https://arxiv.org/abs/2205.14135"'),
@@ -101,33 +95,11 @@ server.tool(
     const ctx = await resolvePaper(args);
     const markdown = await searcher.paperMd(ctx);
 
-    let response: string;
-
-    if (args.prompt) {
-      // Freeform mode
-      const reader = makeReader(paperReadingSystem);
-      const input = `${args.prompt}\n\nPaper Text:\n\n\`\`\`markdown\n${markdown}\n\`\`\``;
-      const completion = await reader.call(input);
-      response = completion.choices[0]?.message?.content ?? '';
-    } else {
-      // 3-step structured pipeline
-      const templates = [paperReading00, paperReading01, paperReading02];
-      const responses: string[] = [];
-
-      for (const tmpl of templates) {
-        const reader = makeReader(paperReadingSystem, tmpl);
-        const input = { response: responses, markdown };
-        const completion = await reader.call(input);
-        const text = completion.choices[0]?.message?.content ?? '';
-        responses.push(text);
-      }
-
-      response = [
-        '## Step 1: Quick Scan\n\n' + responses[0],
-        '## Step 2: Deep Dive\n\n' + responses[1],
-        '## Step 3: Critical Thinking\n\n' + responses[2],
-      ].join('\n\n---\n\n');
-    }
+    const reader = makeReader(paperReadingSystem);
+    const userPrompt = args.prompt ?? 'Read this paper and provide a structured analysis.';
+    const input = `${userPrompt}\n\n---\n\n${markdown}`;
+    const completion = await reader.call(input);
+    const response = completion.choices[0]?.message?.content ?? '';
 
     return {
       content: [{
