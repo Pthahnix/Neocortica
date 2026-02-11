@@ -1,5 +1,9 @@
 # Folders starting with a dot.
-**/.*/
+.code/
+.context/
+.git/
+.paper/
+.prompt/
 
 # Windows.
 Thumbs.db

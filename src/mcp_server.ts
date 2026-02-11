@@ -19,8 +19,8 @@ const searcher = new PaperSearcher();
 
 function makeReader(systemPrompt: string) {
   return new PaperReader({
-    baseUrl:   process.env['BASE_URL_OPENROUTER']!,
-    apiKey:    process.env['API_KEY_OPENROUTER']!,
+    baseUrl:   process.env['BASE_URL_MODEL']!,
+    apiKey:    process.env['API_KEY_MODEL']!,
     modelName: process.env['MODEL_NAME']!,
     systemPrompt,
   });

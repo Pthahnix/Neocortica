@@ -7,5 +7,9 @@ build/
 node_modules/
 
 # Ignore folders starting with a dot
-.paper/
+.claude/
+.code/
 .context/
+.git/
+.paper/
+.prompt/
