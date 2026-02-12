@@ -26,3 +26,4 @@ __pycache__/
 
 # Environment files.
 .env
+.mcp.json
