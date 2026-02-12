@@ -41,8 +41,8 @@ export class BasicLLM {
     messages.push({ role: 'user', content: userContent });
 
     return this.client.chat.completions.create({
-      model:    this.modelName,
-      messages,
+      model: this.modelName,
+      messages: messages,
     });
   }
 }
