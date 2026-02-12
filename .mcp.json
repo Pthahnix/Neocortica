@@ -5,8 +5,8 @@
       "args": ["tsx", "mcp/src/mcp_server.ts"],
       "cwd": "D:\\NEOCORTICA",
       "env": {
-        "NEOCORTICA_API_URL": "https://your-app.up.railway.app",
-        "NEOCORTICA_API_KEY": ""
+        "NEOCORTICA_API_URL": "https://neocortica-production.up.railway.app",
+        "NEOCORTICA_API_KEY": "neocortica_api_key"
       }
     }
   }
