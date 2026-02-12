@@ -1,57 +1,78 @@
 # NEOCORTICA
 
-- [NEOCORTICA](#neocortica)
-  - [Setup](#setup)
-  - [Usage](#usage)
-    - [Slash command](#slash-command)
-    - [Direct tool calls](#direct-tool-calls)
+arXiv paper search & AI-powered reading tool, exposed as a [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for Claude Code.
 
-arXiv paper search & AI reading tool, exposed as a Claude Code MCP server.
+> **This is a personal demo / toy project (v2.0.0).** It is not intended for production use or public consumption. The hosted backend requires an API key — if you're interested in trying it out, reach out to me directly.
 
-## Setup
+## Architecture
 
-1. Install dependencies:
+```
+Claude Code ←stdio→ MCP Client (local) ←HTTPS→ Backend API (Railway)
+                                                    ├── arXiv fetch
+                                                    ├── arxiv2md conversion
+                                                    └── LLM reading (OpenRouter)
+```
+
+- `mcp/` — lightweight local MCP server that forwards requests to the backend via HTTP
+- `backend/` — Hono HTTP API deployed on Railway, handles paper fetching and AI analysis
+
+## Tools
+
+| Tool | Description |
+|------|-------------|
+| `paper_searching` | Fetch the full markdown text of an arXiv paper |
+| `paper_reading` | AI-powered structured paper analysis, with optional custom prompt |
+
+## Setup (for reference)
+
+This requires a valid `NEOCORTICA_API_KEY` to access the hosted backend.
+
+1. Clone the repo and install MCP client dependencies:
 
    ```bash
-   npm install
+   cd mcp && npm install
    ```
 
-2. Create `.env` with your OpenRouter API key:
+2. Copy `.mcp.example.json` to `.mcp.json` and fill in your credentials:
 
-   ```bash
-   BASE_URL_OPENROUTER=https://openrouter.ai/api/v1
-   API_KEY_OPENROUTER=sk-or-v1-xxxxx
+   ```json
+   {
+     "mcpServers": {
+       "neocortica": {
+         "command": "npx",
+         "args": ["tsx", "mcp/src/mcp_server.ts"],
+         "env": {
+           "NEOCORTICA_API_URL": "https://neocortica-production.up.railway.app",
+           "NEOCORTICA_API_KEY": "your_api_key"
+         }
+       }
+     }
+   }
    ```
 
-3. The MCP server is already registered in `.mcp.json`. Restart Claude Code to pick it up.
+3. Restart Claude Code to pick up the MCP server.
 
 ## Usage
 
 ### Slash command
 
-```bash
+```
+/paper arxiv 2205.14135
 /paper read https://arxiv.org/abs/2205.14135
-/paper what are the main contributions of 2205.14135
 ```
 
 ### Direct tool calls
 
-Claude Code will automatically have access to two tools:
-
-**paper_searching** — fetch paper markdown
-
-```bash
+```
 Use paper_searching with id "2205.14135"
+Use paper_reading with id "2205.14135"
+Use paper_reading with id "2205.14135" and prompt "What datasets were used?"
 ```
 
-**paper_reading** — AI-powered paper analysis (3-step structured reading)
+## Self-hosting
 
-```bash
-Use paper_reading with url "https://arxiv.org/abs/2205.14135"
-```
+If you want to run your own backend, see `.env.example` for the required environment variables. You'll need an OpenRouter (or compatible) API key for the LLM reading feature.
 
-**paper_reading with custom prompt** — ask a specific question
+## License
 
-```bash
-Use paper_reading with id "2205.14135" and prompt "What datasets were used for evaluation?"
-```
+MIT
