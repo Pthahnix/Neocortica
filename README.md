@@ -6,7 +6,7 @@ arXiv paper search & AI-powered reading tool, exposed as a [Model Context Protoc
 
 ## Architecture
 
-```
+```bash
 Claude Code ←stdio→ MCP Client (local) ←HTTPS→ Backend API (Railway)
                                                     ├── arXiv fetch
                                                     ├── arxiv2md conversion
@@ -19,7 +19,7 @@ Claude Code ←stdio→ MCP Client (local) ←HTTPS→ Backend API (Railway)
 ## Tools
 
 | Tool | Description |
-|------|-------------|
+| ------ | ------------- |
 | `paper_searching` | Fetch the full markdown text of an arXiv paper |
 | `paper_reading` | AI-powered structured paper analysis, with optional custom prompt |
 
@@ -56,14 +56,14 @@ This requires a valid `NEOCORTICA_API_KEY` to access the hosted backend.
 
 ### Slash command
 
-```
+```bash
 /paper arxiv 2205.14135
 /paper read https://arxiv.org/abs/2205.14135
 ```
 
 ### Direct tool calls
 
-```
+```bash
 Use paper_searching with id "2205.14135"
 Use paper_reading with id "2205.14135"
 Use paper_reading with id "2205.14135" and prompt "What datasets were used?"
