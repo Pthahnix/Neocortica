@@ -1,5 +1,11 @@
 # NEOCORTICA
 
+- [NEOCORTICA](#neocortica)
+  - [Setup](#setup)
+  - [Usage](#usage)
+    - [Slash command](#slash-command)
+    - [Direct tool calls](#direct-tool-calls)
+
 arXiv paper search & AI reading tool, exposed as a Claude Code MCP server.
 
 ## Setup
