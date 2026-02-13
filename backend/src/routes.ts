@@ -65,6 +65,21 @@ routes.post('/read', async (c) => {
   try {
     const body = await c.req.json<{ id?: string; url?: string; title?: string; prompt?: string }>();
     const ctx = await resolvePaper(body);
+
+    // If not cached, trigger background fetch and return early
+    if (!searcher.hasCached(ctx)) {
+      searcher.paperMd(ctx).catch((e) => {
+        console.error(`[read] background fetch failed for ${ctx.paperId}:`, e);
+      });
+      return c.json({
+        title: ctx.paperTitle,
+        url: ctx.paperUrl,
+        response: `Paper "${ctx.paperTitle}" is not cached yet. ` +
+          `Fetching has been triggered in the background. Please retry in a moment.`,
+        status: 'fetching',
+      });
+    }
+
     const markdown = await searcher.paperMd(ctx);
 
     const reader = makeReader(paperReadingSystem);

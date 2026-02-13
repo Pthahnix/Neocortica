@@ -12,6 +12,7 @@ const ARXIV_API_URL    = process.env['BASE_URL_ARXIV']    ?? 'http://export.arxi
 const ARXIV2MD_API_URL = process.env['BASE_URL_ARXIV2MD'] ?? 'https://arxiv2md.org/api/ingest';
 const ARXIV_URL_RE     = /^https?:\/\/arxiv\.org\/abs\/(\d{4}\.\d{4,5}(v\d+)?)$/;
 const PAPER_DIR        = process.env['PAPER_CACHE'] ?? '.paper';
+const FETCH_TIMEOUT    = 2 * 60_000; // 2 minutes for external fetches
 
 // ── PaperSearcher ───────────────────────────────────────────────────
 
@@ -45,7 +46,9 @@ export class PaperSearcher {
       }
     }
     const params = new URLSearchParams({ id_list: ctx.paperId });
-    const resp = await fetch(`${ARXIV_API_URL}?${params}`);
+    const resp = await fetch(`${ARXIV_API_URL}?${params}`, {
+      signal: AbortSignal.timeout(FETCH_TIMEOUT),
+    });
     if (!resp.ok) throw new Error(`arXiv API ${resp.status}`);
     const parsed = new XMLParser().parse(await resp.text());
     const entry = Array.isArray(parsed?.feed?.entry) ? parsed.feed.entry[0] : parsed?.feed?.entry;
@@ -62,6 +65,10 @@ export class PaperSearcher {
     return join(PAPER_DIR, ctx.paperId + '-' + this.titleToFilename(ctx.paperTitle) + '.md');
   }
 
+  hasCached(ctx: { paperFile: string }): boolean {
+    return existsSync(ctx.paperFile);
+  }
+
   async paperMd(ctx: { paperTitle: string, paperId: string, paperUrl: string, paperFile: string }): Promise<string> {
     if (existsSync(ctx.paperFile)) {
       console.log(`[paperMd] cache hit: ${ctx.paperFile}`);
@@ -72,6 +79,7 @@ export class PaperSearcher {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ input_text: ctx.paperUrl }),
+      signal: AbortSignal.timeout(FETCH_TIMEOUT),
     });
     if (!resp.ok) throw new Error(`arxiv2md ${resp.status}`);
     const data = await resp.json() as { content?: string };

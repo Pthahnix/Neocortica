@@ -22,7 +22,11 @@ export class BasicLLM {
   protected promptTemplate: string | null;
 
   constructor(config: BasicLLMConfig) {
-    this.client         = new OpenAI({ baseURL: config.baseUrl, apiKey: config.apiKey });
+    this.client         = new OpenAI({
+      baseURL: config.baseUrl,
+      apiKey: config.apiKey,
+      timeout: 3 * 60_000, // 3 minutes
+    });
     this.modelName      = config.modelName;
     this.systemPrompt   = config.systemPrompt   ?? null;
     this.promptTemplate = config.promptTemplate ?? null;

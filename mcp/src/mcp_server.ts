@@ -21,6 +21,8 @@ if (!API_URL) {
 
 // ── HTTP helper ─────────────────────────────────────────────────────
 
+const API_TIMEOUT = 5 * 60_000; // 5 minutes
+
 async function apiCall(endpoint: string, body: object): Promise<unknown> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (API_KEY) headers['X-API-Key'] = API_KEY;
@@ -29,6 +31,7 @@ async function apiCall(endpoint: string, body: object): Promise<unknown> {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(API_TIMEOUT),
   });
 
   const data = await resp.json();
