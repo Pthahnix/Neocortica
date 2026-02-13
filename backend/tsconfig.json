@@ -1,16 +1,10 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ES2022",
-    "moduleResolution": "bundler",
     "allowImportingTsExtensions": false,
-    "esModuleInterop": true,
-    "strict": true,
+    "noEmit": false,
     "outDir": "dist",
-    "rootDir": ".",
-    "resolveJsonModule": true,
-    "declaration": true,
-    "skipLibCheck": true
+    "rootDir": "."
   },
   "include": ["src/**/*.ts", "prompt/**/*.ts"],
   "exclude": ["node_modules", "dist"]
