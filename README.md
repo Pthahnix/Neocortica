@@ -16,7 +16,7 @@ An MCP (Model Context Protocol) server for reading and analyzing arXiv papers wi
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/your-username/NEOCORTICA_MCP.git
+git clone https://github.com/Pthahnix/NEOCORTICA_MCP.git
 cd NEOCORTICA_MCP
 npm install
 ```
