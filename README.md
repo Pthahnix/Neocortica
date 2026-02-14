@@ -2,6 +2,8 @@
 
 ![NEOCORTICA](./assets/cover.png)
 
+> **Note:** This project is currently a personal demo / prototype and is not ready for general use. The backend service and API keys are private, so cloning this repo alone won't give you a working setup. Feel free to browse the code for reference or inspiration.
+
 An MCP (Model Context Protocol) server for reading and analyzing arXiv papers with AI. Works with Claude Code and other MCP-compatible clients.
 
 ## Prerequisites
