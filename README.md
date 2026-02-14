@@ -1,4 +1,6 @@
-# NEOCORTICA MCP
+# NEOCORTICA
+
+![NEOCORTICA](./assets/cover.png)
 
 An MCP (Model Context Protocol) server for reading and analyzing arXiv papers with AI. Works with Claude Code and other MCP-compatible clients.
 
