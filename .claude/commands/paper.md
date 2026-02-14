@@ -1,3 +1,4 @@
+<!-- markdownlint-disable -->
 You have access to NEOCORTICA paper tools via MCP. Use them to handle the user's request about arXiv papers.
 
 ## Tools
