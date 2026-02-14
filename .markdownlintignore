@@ -1,15 +1,6 @@
 <!-- markdownlint-disable -->
-
-# Ignore build output
-build/
-
 # Ignore node_modules
 node_modules/
 
-# Ignore folders starting with a dot
-.claude/
-.code/
-.context/
-.git/
-.paper/
-.prompt/
+# Ignore skills
+.claude/commands

@@ -1,78 +1,87 @@
-# NEOCORTICA
+# NEOCORTICA MCP
 
-arXiv paper search & AI-powered reading tool, exposed as a [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for Claude Code.
+An MCP (Model Context Protocol) server for reading and analyzing arXiv papers with AI. Works with Claude Code and other MCP-compatible clients.
 
-> **This is a personal demo / toy project (v2.0.0).** It is not intended for production use or public consumption. The hosted backend requires an API key — if you're interested in trying it out, reach out to me directly.
+## Prerequisites
 
-## Architecture
+- Node.js >= 18
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (or any MCP-compatible client)
+
+## Setup
+
+### 1. Clone and install
 
 ```bash
-Claude Code ←stdio→ MCP Client (local) ←HTTPS→ Backend API (Railway)
-                                                    ├── arXiv fetch
-                                                    ├── arxiv2md conversion
-                                                    └── LLM reading (OpenRouter)
+git clone https://github.com/your-username/NEOCORTICA_MCP.git
+cd NEOCORTICA_MCP
+npm install
 ```
 
-- `mcp/` — lightweight local MCP server that forwards requests to the backend via HTTP
-- `backend/` — Hono HTTP API deployed on Railway, handles paper fetching and AI analysis
+### 2. Configure environment
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your credentials:
+
+```env
+API_KEY_NEOCORTICA='your_api_secret'
+BASE_URL_NEOCORTICA='https://neocortica-railway-production.up.railway.app'
+```
+
+### 3. Configure MCP
+
+The repo includes a `.mcp.json` that Claude Code picks up automatically when you open the project directory. No extra configuration needed — just `cd` into the project and start Claude Code:
+
+```bash
+cd NEOCORTICA_MCP
+claude
+```
+
+Claude Code will detect the `.mcp.json` and register the `neocortica` MCP server.
+
+If you want to use it from a different project directory, copy the MCP config into that project's `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "neocortica": {
+      "command": "npx",
+      "args": ["tsx", "src/mcp_server.ts"],
+      "cwd": "/absolute/path/to/NEOCORTICA_MCP"
+    }
+  }
+}
+```
+
+## Usage
+
+The repo includes a `/neocortica` slash command (in `.claude/commands/neocortica.md`). In Claude Code:
+
+```bash
+/neocortica 2205.14135
+```
+
+```bash
+/neocortica 2205.14135 What novel methods does this paper propose?
+```
+
+```bash
+/neocortica https://arxiv.org/abs/2205.14135
+```
+
+You can also call the MCP tools directly without the slash command — just ask Claude to use `paper_reading` or `paper_searching`.
 
 ## Tools
 
 | Tool | Description |
-| ------ | ------------- |
-| `paper_searching` | Fetch the full markdown text of an arXiv paper |
-| `paper_reading` | AI-powered structured paper analysis, with optional custom prompt |
+| ---- | ----------- |
+| `paper_reading` | Fetch + AI analysis of an arXiv paper. This is the primary tool. |
+| `paper_searching` | Fetch raw markdown of an arXiv paper without AI analysis. |
 
-## Setup (for reference)
-
-This requires a valid `NEOCORTICA_API_KEY` to access the hosted backend.
-
-1. Clone the repo and install MCP client dependencies:
-
-   ```bash
-   cd mcp && npm install
-   ```
-
-2. Copy `.mcp.example.json` to `.mcp.json` and fill in your credentials:
-
-   ```json
-   {
-     "mcpServers": {
-       "neocortica": {
-         "command": "npx",
-         "args": ["tsx", "mcp/src/mcp_server.ts"],
-         "env": {
-           "NEOCORTICA_API_URL": "https://neocortica-production.up.railway.app",
-           "NEOCORTICA_API_KEY": "your_api_key"
-         }
-       }
-     }
-   }
-   ```
-
-3. Restart Claude Code to pick up the MCP server.
-
-## Usage
-
-### Slash command
+## Quick Start Test
 
 ```bash
-/paper arxiv 2205.14135
-/paper read https://arxiv.org/abs/2205.14135
+/neocortica arxiv:2601.03267, Analyze the key contributions, methodology, and limitations of this paper. Highlight what makes it significant in the context of prior work.
 ```
-
-### Direct tool calls
-
-```bash
-Use paper_searching with id "2205.14135"
-Use paper_reading with id "2205.14135"
-Use paper_reading with id "2205.14135" and prompt "What datasets were used?"
-```
-
-## Self-hosting
-
-If you want to run your own backend, see `.env.example` for the required environment variables. You'll need an OpenRouter (or compatible) API key for the LLM reading feature.
-
-## License
-
-MIT

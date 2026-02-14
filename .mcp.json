@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "neocortica": {
+      "command": "npx",
+      "args": ["tsx", "src/mcp_server.ts"]
+    }
+  }
+}

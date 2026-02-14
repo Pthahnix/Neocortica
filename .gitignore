@@ -1,29 +1,4 @@
-# Folders starting with a dot.
-.claude/settings.local.json
-.code/
-.context/
-.git/
-.paper/
-.prompt/
-
-# Windows.
-Thumbs.db
-Desktop.ini
-
-# Node / common.
 node_modules/
 dist/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# Python.
-__pycache__/
-*.py[cod]
-*.egg-info/
-.pytest_cache/
-
-# Environment files.
 .env
-.mcp.json
+.claude/settings.local.json
