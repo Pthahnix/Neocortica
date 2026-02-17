@@ -4,6 +4,7 @@ import 'dotenv/config';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
+import { pdfMarkdown } from './pdf_utils.ts';
 
 // ── Config ───────────────────────────────────────────────────────────
 
@@ -38,14 +39,6 @@ async function apiCall<T>(
   return resp.json() as Promise<T>;
 }
 
-// ── Schema ───────────────────────────────────────────────────────────
-
-const PaperArgs = {
-  id:    z.string().optional().describe('arXiv ID, e.g. "2205.14135"'),
-  url:   z.string().optional().describe('arXiv URL, e.g. "https://arxiv.org/abs/2205.14135"'),
-  title: z.string().optional().describe('Paper title (optional)'),
-};
-
 // ── MCP Server ───────────────────────────────────────────────────────
 
 const server = new McpServer({
@@ -56,40 +49,53 @@ const server = new McpServer({
 // paper_searching — fetch raw markdown
 server.tool(
   'paper_searching',
-  'Fetch the full markdown text of an arXiv paper',
-  PaperArgs,
+  'Fetch the full markdown text of an arXiv paper. Provide at least id, url, or title.',
+  {
+    id:    z.string().optional().describe('arXiv ID, e.g. "2205.14135"'),
+    url:   z.string().optional().describe('arXiv URL, e.g. "https://arxiv.org/abs/2205.14135"'),
+    title: z.string().optional().describe('Paper title, e.g. "Attention Is All You Need"'),
+  },
   async (args) => {
     const params: Record<string, string> = {};
-    if (args.id)  params['id']  = args.id;
-    if (args.url) params['url'] = args.url;
+    if (args.id)    params['id']    = args.id;
+    if (args.url)   params['url']   = args.url;
+    if (args.title) params['title'] = args.title;
 
-    const data = await apiCall<{ title: string; markdown: string }>(
+    const data = await apiCall<{ markdown: string }>(
       'GET', '/paper/search', params,
     );
     return { content: [{ type: 'text' as const, text: data.markdown }] };
   },
 );
 
-// paper_reading — AI analysis
+// paper_reading — AI analysis (arxiv or local PDF)
 server.tool(
   'paper_reading',
-  'Read an arXiv paper with AI and return structured analysis. Optionally provide a custom prompt.',
-  { ...PaperArgs, prompt: z.string().optional().describe('Custom reading prompt') },
+  'Read a paper with AI analysis. Supports arXiv (id/url/title) or local PDF (path).',
+  {
+    id:     z.string().optional().describe('arXiv ID, e.g. "2205.14135"'),
+    url:    z.string().optional().describe('arXiv URL, e.g. "https://arxiv.org/abs/2205.14135"'),
+    title:  z.string().optional().describe('Paper title (optional)'),
+    path:   z.string().optional().describe('Local PDF file path'),
+    prompt: z.string().optional().describe('Custom reading prompt'),
+  },
   async (args) => {
     const body: Record<string, string> = {};
-    if (args.id)     body['id']     = args.id;
-    if (args.url)    body['url']    = args.url;
     if (args.prompt) body['prompt'] = args.prompt;
 
-    const data = await apiCall<{ title: string; response: string; status?: string; message?: string }>(
-      'POST', '/paper/read', undefined, body,
-    );
-
-    // Handle 202 "fetching" response
-    if (data.status === 'fetching') {
-      return { content: [{ type: 'text' as const, text: `[${data.title}] ${data.message}` }] };
+    if (args.path) {
+      // Local PDF → convert via Modal, send markdown to backend
+      const md = await pdfMarkdown({ path: args.path });
+      body['markdown'] = md;
+    } else {
+      if (args.id)    body['id']    = args.id;
+      if (args.url)   body['url']   = args.url;
+      if (args.title) body['title'] = args.title;
     }
 
+    const data = await apiCall<{ response: string }>(
+      'POST', '/paper/read', undefined, body,
+    );
     return { content: [{ type: 'text' as const, text: data.response }] };
   },
 );
