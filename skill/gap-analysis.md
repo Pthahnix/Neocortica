@@ -258,10 +258,9 @@ Pass the ranked gap list + full knowledge + papersRead to **Idea Generation** (s
 
 ## Key Differences from Previous Version
 
-**Removed**:
-- All Perplexity tool calls (pplx_ask, pplx_deep_research)
+**Removed** (from earlier versions):
 - Fixed "dual-source verification" step
-- External validation checkpoint
+- External validation checkpoint (previously Perplexity-based)
 
 **Added**:
 - Iterative SEARCH→READ→REFLECT→EVALUATE loop

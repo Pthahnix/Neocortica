@@ -311,9 +311,8 @@ This stage takes the Experiment Plan as input and executes it on a RunPod GPU po
 
 ## Key Differences from Previous Version
 
-**Removed**:
-- All Perplexity tool calls (pplx_deep_research, pplx_ask)
-- External validation checkpoint
+**Removed** (from earlier versions):
+- External validation checkpoint (previously Perplexity-based)
 
 **Added**:
 - Iterative SEARCH→READ→REFLECT→EVALUATE loop

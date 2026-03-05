@@ -241,10 +241,9 @@ Pass the full output (knowledge + papersRead + diary) to **Gap Analysis** (skill
 
 ## Key Differences from Previous Version
 
-**Removed**:
-- All Perplexity tool calls (pplx_search, pplx_ask, pplx_pro_research, pplx_deep_research)
+**Removed** (from earlier versions):
 - Fixed "Tier 1-2-3" augmentation steps
-- External validation checkpoint
+- External validation checkpoint (previously Perplexity-based)
 
 **Added**:
 - Iterative SEARCH→READ→REFLECT→EVALUATE loop

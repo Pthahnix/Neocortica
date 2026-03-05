@@ -5,7 +5,6 @@ import { z } from "zod";
 import { paperContent } from "./tools/markdown.js";
 import { acdSearch, dfsSearch } from "./tools/academic.js";
 import { webSearch, webContent } from "./tools/web.js";
-import { pplxSearch, pplxAsk, pplxProResearch, pplxDeepResearch } from "./tools/perplexity.js";
 
 const server = new McpServer({
   name: "neocortica",
@@ -130,80 +129,6 @@ server.tool(
       return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
     } catch (e: any) {
       return { isError: true, content: [{ type: "text" as const, text: `web_content failed: ${e.message}` }] };
-    }
-  },
-);
-
-// ── Perplexity Tools ─────────────────────────────────────────────────
-
-server.tool(
-  "pplx_search",
-  "Quick web search via Perplexity Search API. Returns structured search results with titles, URLs, and snippets. " +
-  "Use as a complement to web_search for broader coverage.",
-  {
-    query: z.string().describe("Search query"),
-    max_results: z.number().optional().describe("Max results (default 5)"),
-  },
-  async (args) => {
-    try {
-      const results = await pplxSearch(args.query, { max_results: args.max_results });
-      return { content: [{ type: "text" as const, text: JSON.stringify(results, null, 2) }] };
-    } catch (e: any) {
-      return { isError: true, content: [{ type: "text" as const, text: `pplx_search failed: ${e.message}` }] };
-    }
-  },
-);
-
-server.tool(
-  "pplx_ask",
-  "Ask a question via Perplexity Sonar. Returns a grounded answer with citations. " +
-  "Supports web/academic/sec search modes. Use for fact-checking and gap validation.",
-  {
-    question: z.string().describe("Question to ask"),
-    search_mode: z.enum(["web", "academic", "sec"]).optional().describe("Search mode (default: web)"),
-  },
-  async (args) => {
-    try {
-      const result = await pplxAsk(args.question, { search_mode: args.search_mode });
-      return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
-    } catch (e: any) {
-      return { isError: true, content: [{ type: "text" as const, text: `pplx_ask failed: ${e.message}` }] };
-    }
-  },
-);
-
-server.tool(
-  "pplx_pro_research",
-  "Multi-step research via Perplexity sonar-pro with high search context. " +
-  "Use for open-ended exploration of tangential topics and broad field scanning.",
-  {
-    question: z.string().describe("Research question"),
-    system_prompt: z.string().optional().describe("Optional system prompt for focus"),
-  },
-  async (args) => {
-    try {
-      const result = await pplxProResearch(args.question, args.system_prompt);
-      return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
-    } catch (e: any) {
-      return { isError: true, content: [{ type: "text" as const, text: `pplx_pro_research failed: ${e.message}` }] };
-    }
-  },
-);
-
-server.tool(
-  "pplx_deep_research",
-  "Deep research via Perplexity sonar-deep-research (async). Performs 20-50 automated searches. " +
-  "Use for mandatory stage validation and comprehensive fact-checking. Expensive — use sparingly.",
-  {
-    question: z.string().describe("Deep research question"),
-    timeout_ms: z.number().optional().describe("Timeout in ms (default 10 min)"),
-  },
-  async (args) => {
-    try {
-      const result = await pplxDeepResearch(args.question, { timeout_ms: args.timeout_ms });
-      return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
-    } catch (e: any) {
-      return { isError: true, content: [{ type: "text" as const, text: `pplx_deep_research failed: ${e.message}` }] };
     }
   },
 );

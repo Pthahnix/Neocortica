@@ -276,10 +276,9 @@ Pass the top-ranked idea (or user-selected idea) + full knowledge + papersRead t
 
 ## Key Differences from Previous Version
 
-**Removed**:
-- All Perplexity tool calls (pplx_ask, pplx_deep_research)
+**Removed** (from earlier versions):
 - Fixed "novelty pre-check" as separate step
-- External validation checkpoint
+- External validation checkpoint (previously Perplexity-based)
 
 **Added**:
 - Iterative SEARCH→READ→REFLECT→EVALUATE loop

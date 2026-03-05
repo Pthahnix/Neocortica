@@ -1,6 +1,6 @@
 # Neocortica — Tool Reference
 
-MCP server with 9 tools for academic research and web content retrieval. All tools cache results locally under `DIR_CACHE`.
+MCP server with 5 tools for academic research and web content retrieval. All tools cache results locally under `DIR_CACHE`.
 
 ## Tools
 

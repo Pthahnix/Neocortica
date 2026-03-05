@@ -22,23 +22,6 @@ See `skill/tools.md` for details.
 | `dfs_search` | Citation chain exploration (Semantic Scholar reference tree) |
 | `web_search` | Web search (Brave Search) |
 | `web_content` | Web page → markdown |
-| `pplx_search` | Pure search via Perplexity (web/academic/sec). Fallback after web_search/acd_search |
-| `pplx_ask` | Grounded Q&A with citations. Fallback for gap/novelty verification |
-| `pplx_pro_research` | Multi-step Pro research. 1x per pipeline for tangential exploration |
-| `pplx_deep_research` | Deep research (20-50 searches). 4x per pipeline for mandatory validation |
-
-## Tool Priority Order
-
-Perplexity tools are powerful but expensive. ALWAYS exhaust free tools first.
-
-```
-Priority 1 (free):     acd_search, web_search, dfs_search, paper_content
-Priority 2 (cheap):    pplx_search ($0.005), pplx_ask (~$0.02) — fallback only
-Priority 3 (moderate): pplx_pro_research (~$0.05) — exactly 1x per pipeline
-Priority 4 (expensive): pplx_deep_research (~$0.40) — exactly 4x per pipeline (mandatory)
-```
-
-Estimated cost per full pipeline: ~$1.80
 
 ## Intent Routing
 
@@ -201,30 +184,6 @@ When the user's intent is "do research", execute this four-stage pipeline. Each 
 **Output**: Experiment results (metrics, logs, code) saved to `./results/<experiment-name>/`
 
 > This stage uses real compute resources and costs money. It is NEVER auto-triggered — user must explicitly request execution.
-
-### Validation Loop Protocol
-
-Every stage ends with a mandatory `pplx_deep_research` validation. This is non-negotiable.
-
-**Flow per stage:**
-1. Complete stage work → produce stage output
-2. Load validation prompt template (`prompt/validate-{stage}.md`)
-3. Fill `{{STAGE_OUTPUT}}` placeholder with actual output
-4. Call `pplx_deep_research` with filled prompt
-5. Parse JSON response → classify issues by severity
-
-**Issue handling:**
-- **CRITICAL** (core claim wrong, key competitor missed, novelty invalid):
-  → HALT pipeline. Report issue + evidence to user. Wait for user decision.
-- **WARNING** (minor inaccuracy, one missing paper, imprecise wording):
-  → Auto-fix: targeted search (Priority 1 tools first) to fill gap or correct claim.
-  → Re-validate fixed section with `pplx_ask` (NOT deep_research).
-  → Max 2 auto-fix rounds. If still WARNING after 2 rounds → escalate to user.
-- **INFO** (optional suggestion, minor improvement):
-  → Log for reference. Incorporate if trivial. Continue.
-
-**Budget per stage:** 1x `pplx_deep_research` + up to 2x `pplx_ask` for auto-fixes.
-**Total pipeline budget:** 4x deep_research + up to 8x pplx_ask = ~$1.76 worst case.
 
 ---
 
