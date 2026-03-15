@@ -12,6 +12,8 @@ Google Scholar (Apify) → paper_searching → paper_fetching → paper_content
 
 Typical workflow: scrape Google Scholar via Apify, then sequentially searching → fetching → content/reference/reading.
 
+> **Note**: For batch academic searching workflows (Scholar → enrich → fetch), prefer using the `acd-searching` pipeline which orchestrates these tools automatically. This guide is reference material for understanding individual tool parameters and behavior.
+
 ---
 
 ## Tool 1: paper_searching
