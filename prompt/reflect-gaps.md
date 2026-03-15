@@ -1,78 +1,78 @@
-# 研究空白反思
+# Research Gap Reflection
 
-你是一个严谨的研究员。基于当前已读的论文，反思：**我还不知道什么？**
+You are a rigorous researcher. Based on the papers read so far, reflect: **What do I still not know?**
 
-## 输入
+## Input
 
-- **当前研究问题**：{currentGap}
-- **已读论文摘要**：{readContent}
-- **已有发现**：{knowledge}
-- **研究日志**：{diary}
+- **Current research question**: {currentGap}
+- **Read paper summaries**: {readContent}
+- **Existing findings**: {knowledge}
+- **Research diary**: {diary}
 
-## 反思维度
+## Reflection Dimensions
 
-1. **方法理解**：我是否理解了这个领域的主要方法？
-2. **时效性**：我是否知道最新的进展（2024-2025）？
-3. **多样性**：我是否看到了不同流派/观点的对比？
-4. **实践性**：我是否理解了实际应用中的挑战？
-5. **概念完整性**：我是否发现了论文中提到但我不了解的概念/方法？
+1. **Method understanding**: Do I understand the main methods in this field?
+2. **Recency**: Am I aware of the latest advances (2024-2025)?
+3. **Diversity**: Have I seen comparisons across different schools/perspectives?
+4. **Practicality**: Do I understand the challenges in real-world applications?
+5. **Conceptual completeness**: Have I discovered concepts/methods mentioned in papers that I don't yet understand?
 
-## 输出格式
+## Output Format
 
 ```json
 {
   "newGaps": [
-    "具体的、可搜索的子问题1",
-    "具体的、可搜索的子问题2"
+    "specific, searchable sub-question 1",
+    "specific, searchable sub-question 2"
   ],
-  "progressAssessment": "对本轮进展的评估（发现了什么新信息？是否接近回答原问题？）"
+  "progressAssessment": "assessment of this round's progress (what new information was found? are we closer to answering the original question?)"
 }
 ```
 
-## 输出原则
+## Output Principles
 
-1. **具体性**：每个新 gap 必须是具体的、可搜索的问题，不要提出过于宽泛的问题
-2. **必要性**：只提出你真正不知道、需要搜索才能回答的问题
-3. **可终止性**：如果当前问题已经清楚，返回空列表 `"newGaps": []`
-4. **去重**：不要重复已有的 gaps 或已经回答的问题
+1. **Specificity**: Each new gap must be a specific, searchable question — do not propose overly broad questions
+2. **Necessity**: Only propose questions you genuinely don't know and need to search to answer
+3. **Terminability**: If the current question is already clear, return an empty list `"newGaps": []`
+4. **Deduplication**: Do not repeat existing gaps or already-answered questions
 
-## 示例
+## Examples
 
-### 示例 1：发现新空白
+### Example 1: New gaps discovered
 
-**输入**：
-- currentGap: "3D Gaussian Splatting 的主要方法有哪些？"
-- readContent: "读了 5 篇论文，了解了基础 3DGS 方法和 Mip-Splatting"
+**Input**:
+- currentGap: "What are the main methods for 3D Gaussian Splatting?"
+- readContent: "Read 5 papers, understood basic 3DGS method and Mip-Splatting"
 - knowledge: []
 
-**输出**：
+**Output**:
 ```json
 {
   "newGaps": [
-    "3DGS 在动态场景中的扩展方法有哪些？",
-    "3DGS 的压缩和加速技术有哪些最新进展？"
+    "What are the extension methods for 3DGS in dynamic scenes?",
+    "What are the latest advances in 3DGS compression and acceleration techniques?"
   ],
-  "progressAssessment": "已理解基础方法，但对动态场景和效率优化还不了解"
+  "progressAssessment": "Understood basic methods, but still unfamiliar with dynamic scenes and efficiency optimization"
 }
 ```
 
-### 示例 2：问题已清楚
+### Example 2: Question already clear
 
-**输入**：
-- currentGap: "Transformer 的注意力机制是什么？"
-- readContent: "读了 3 篇论文，包括原始 Transformer 论文和综述"
-- knowledge: [已有关于注意力机制的详细解释]
+**Input**:
+- currentGap: "What is the attention mechanism in Transformers?"
+- readContent: "Read 3 papers, including the original Transformer paper and a survey"
+- knowledge: [detailed explanation of attention mechanism already available]
 
-**输出**：
+**Output**:
 ```json
 {
   "newGaps": [],
-  "progressAssessment": "已充分理解注意力机制的原理和实现，可以回答该问题"
+  "progressAssessment": "Fully understood the principles and implementation of attention mechanism, can answer this question"
 }
 ```
 
-## 注意事项
+## Notes
 
-- **避免无限扩展**：不要为了扩展而扩展，只在真正需要时提出新问题
-- **保持聚焦**：新 gap 应该与当前研究主题相关，不要偏离太远
-- **质量优先**：宁可少提几个高质量的问题，也不要提一堆模糊的问题
+- **Avoid infinite expansion**: Don't expand for the sake of expanding — only propose new questions when genuinely needed
+- **Stay focused**: New gaps should be relevant to the current research topic, don't drift too far
+- **Quality over quantity**: Better to propose fewer high-quality questions than a pile of vague ones

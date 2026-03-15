@@ -75,12 +75,12 @@ localResultsDir: string     // ./results/<experimentName> (local)
 4. Present to user in a clear table:
 
 ```
-GPU 配置估算:
+GPU Configuration Estimate:
   GPU: NVIDIA A100 80GB PCIe × 1
-  预估时长: 12 小时
-  预估费用: ~$19.68
-  磁盘: 50 GB
-  替代方案: H100 80GB ($26.32, 快 40%)
+  Estimated duration: 12 hours
+  Estimated cost: ~$19.68
+  Disk: 50 GB
+  Alternative: H100 80GB ($26.32, 40% faster)
 ```
 
 5. **USER CONFIRMATION GATE**: Ask user to confirm budget. If declined, STOP.
@@ -213,7 +213,7 @@ curl -s ${podUrl}/task/${taskId}/files/experiment/config.yaml \
 
 ### 5.3 Checkpoints (optional)
 
-Ask user: "是否下载模型 checkpoints？(可能很大)"
+Ask user: "Download model checkpoints? (may be large)"
 If yes: download via `/files` endpoint.
 
 ---
@@ -226,7 +226,7 @@ Call RunPod MCP `stop-pod` with podId.
 
 ### 6.2 Delete Pod
 
-Ask user: "Pod 已停止。是否删除？（删除后数据不可恢复）"
+Ask user: "Pod stopped. Delete? (data is unrecoverable after deletion)"
 If confirmed: call RunPod MCP `delete-pod` with podId.
 If declined: inform user the pod is stopped but still incurring storage costs.
 
@@ -235,25 +235,25 @@ If declined: inform user the pod is stopped but still incurring storage costs.
 Output a final summary:
 
 ```
-## 实验完成: <experimentName>
+## Experiment Complete: <experimentName>
 
-### 结果
-- 关键指标: <metrics from final report>
+### Results
+- Key metrics: <metrics from final report>
 
-### 资源消耗
-- 总运行时间: <hours>
-- 预估费用: ~$<cost>
+### Resource Usage
+- Total runtime: <hours>
+- Estimated cost: ~$<cost>
 - GPU: <type> × <count>
 
-### 本地文件
-- 结果目录: ./results/<experimentName>/
-- 日志: ./results/<experimentName>/logs/
-- 指标: ./results/<experimentName>/metrics/
-- 代码: ./results/<experimentName>/src/
+### Local Files
+- Results directory: ./results/<experimentName>/
+- Logs: ./results/<experimentName>/logs/
+- Metrics: ./results/<experimentName>/metrics/
+- Code: ./results/<experimentName>/src/
 
-### Pod 状态
+### Pod Status
 - Pod ID: <podId>
-- 状态: <已删除 / 已停止>
+- Status: <deleted / stopped>
 ```
 
 ---

@@ -1,0 +1,44 @@
+{
+  "mcpServers": {
+    "neocortica-scholar": {
+      "command": "npx",
+      "args": ["--prefix", "/path/to/neocortica-scholar", "tsx", "/path/to/neocortica-scholar/src/mcp_server.ts"],
+      "env": {
+        "MINERU_TOKEN": "your-mineru-token",
+        "EMAIL": "your-email@example.com",
+        "NEOCORTICA_CACHE": ".cache",
+        "OPENAI_API_KEY": "your-openai-compatible-api-key",
+        "OPENAI_BASE_URL": "https://openrouter.ai/api/v1",
+        "OPENAI_MODEL": "openai/gpt-oss-120b"
+      }
+    },
+    "runpod": {
+      "command": "npx",
+      "args": ["-y", "@runpod/mcp-server@latest"],
+      "env": {
+        "RUNPOD_API_KEY": "your-runpod-api-key"
+      }
+    },
+    "apify": {
+      "command": "npx.cmd",
+      "args": ["-y", "@apify/actors-mcp-server", "--tools", "fetch-actor-details,get-dataset-items,get-dataset-schema,marco.gullo/google-scholar-scraper,apify/rag-web-browser"],
+      "env": {
+        "APIFY_TOKEN": "your-apify-token"
+      }
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": ["-y", "@brave/brave-search-mcp-server@latest"],
+      "env": {
+        "BRAVE_API_KEY": "your-brave-api-key"
+      }
+    },
+    "railway": {
+      "command": "npx",
+      "args": ["-y", "@railway/mcp-server@latest"],
+      "env": {
+        "RAILWAY_API_TOKEN": "your-railway-api-token"
+      }
+    }
+  }
+}

@@ -4,8 +4,6 @@
   "description": "Vibe researching toolkit — AI-powered academic research automation",
   "main": "index.js",
   "scripts": {
-    "mcp": "tsx src/mcp_server.ts",
-    "test": "tsx .test/test-all.ts",
     "build:supervisor": "cd src/supervisor && npm install && npx tsc",
     "docker:build": "npm run build:supervisor && docker build -t neocortica-pod .",
     "docker:push": "docker push neocortica-pod:latest"
@@ -15,17 +13,9 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "@types/adm-zip": "^0.5.7",
     "@types/node": "^25.3.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.26.0",
-    "adm-zip": "^0.5.16",
-    "dotenv": "^17.3.1",
-    "fast-xml-parser": "^5.3.7",
-    "node-fetch": "^3.3.2",
-    "zod": "^4.3.6"
-  }
+  "dependencies": {}
 }

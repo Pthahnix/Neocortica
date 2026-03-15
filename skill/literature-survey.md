@@ -8,7 +8,7 @@ $ARGUMENTS — research topic or question
 
 ## Prerequisites
 
-- Neocortica MCP tools available (acd_search, web_search, dfs_search, paper_content, web_content)
+- Neocortica-Scholar MCP (paper_searching, paper_fetching, paper_content, paper_reference, paper_reading) + Brave Search MCP (brave_web_search) + Apify MCP (marco.gullo/google-scholar-scraper, apify/rag-web-browser)
 - Prompts: `prompt/paper-rating.md`, `prompt/paper-reading.md`, `prompt/reflect-gaps.md`, `prompt/evaluate-answer.md`
 
 ## Overview
@@ -32,9 +32,9 @@ papersRead: Set<string>     // normalizedTitle of papers already read
 
 ```typescript
 gaps = [
-  "该领域的主要方法有哪些？",
-  "最新进展（2024-2025）是什么？",
-  "主要研究组和代表性工作？"
+  "What are the main methods in this field?",
+  "What are the latest advances (2024-2025)?",
+  "What are the major research groups and representative works?"
 ]
 knowledge = []
 papersRead = Set()
@@ -65,16 +65,20 @@ WHILE (gaps.length > 0 AND iteration < MAX_ITERATIONS):
        * Application query (context): use cases/scenarios
 
   2. Parallel Search
-     - acd_search × 3 (one per query)
-     - web_search × 3 (one per query)
+     - google-scholar-scraper × 3 (one per query)
+     - brave_web_search × 3 (one per query)
      - Total: 6 searches in parallel
 
-  3. Deduplication
+  3. Enrich & Fetch
+     - For Scholar results: paper_searching per result (sequential, avoid rate limits)
+     - For those with arxivUrl/oaPdfUrl: paper_fetching (sequential)
+
+  4. Deduplication
      - Filter out papers in papersRead
      - Keep only new papers
 
   4. Log to diary
-     - "第 {iteration+1} 轮 SEARCH: 针对问题'{currentGap}'，执行了 6 次搜索，找到 X 篇新论文"
+     - "Round {iteration+1} SEARCH: targeting question '{currentGap}', executed 6 searches, found X new papers"
 
   // ===== READ Phase =====
   5. Priority Ranking
@@ -95,14 +99,15 @@ WHILE (gaps.length > 0 AND iteration < MAX_ITERATIONS):
 
   7. Reference Expansion (conditional)
      - IF any High-rated paper found AND papersRead.size < MIN_PAPERS_TARGET:
-       * dfs_search(depth=1, breadth=5) on top 1-2 High papers
+       * paper_reference on top 1-2 High papers
+       * paper_searching → paper_fetching on discovered references
        * Add discovered papers to search results for next iteration
 
   8. Update State
      - papersRead.add(all read papers' normalizedTitle)
 
   9. Log to diary
-     - "第 {iteration+1} 轮 READ: 阅读了 K 篇论文（H 篇 High，M 篇 Medium，L 篇 Low），累计已读 {papersRead.size} 篇"
+     - "Round {iteration+1} READ: read K papers (H High, M Medium, L Low), total read {papersRead.size} papers"
 
   // ===== REFLECT Phase =====
   10. Gap Discovery
@@ -119,7 +124,7 @@ WHILE (gaps.length > 0 AND iteration < MAX_ITERATIONS):
           * noProgressCount++
 
   12. Log to diary
-      - "第 {iteration+1} 轮 REFLECT: {progressAssessment}，发现 {newGaps.length} 个新问题"
+      - "Round {iteration+1} REFLECT: {progressAssessment}, discovered {newGaps.length} new questions"
 
   // ===== EVALUATE Phase =====
   13. Answer Evaluation
@@ -135,19 +140,19 @@ WHILE (gaps.length > 0 AND iteration < MAX_ITERATIONS):
           * Keep currentGap in queue
 
   15. Log to diary
-      - IF canAnswer: "第 {iteration+1} 轮 EVALUATE: 成功回答问题'{currentGap}'（置信度: {confidence}）"
-      - ELSE: "第 {iteration+1} 轮 EVALUATE: 尚不能回答'{currentGap}'，原因: {missingInfo}"
+      - IF canAnswer: "Round {iteration+1} EVALUATE: successfully answered question '{currentGap}' (confidence: {confidence})"
+      - ELSE: "Round {iteration+1} EVALUATE: cannot yet answer '{currentGap}', reason: {missingInfo}"
 
   // ===== Stop Condition Check =====
   16. Check Termination
       - IF gaps.length == 0:
-          * STOP: "所有问题已解决"
+          * STOP: "all questions resolved"
       - IF noProgressCount >= NO_PROGRESS_THRESHOLD:
-          * STOP: "连续 3 轮无新发现"
+          * STOP: "no new findings for 3 consecutive rounds"
       - IF papersRead.size >= MIN_PAPERS_TARGET AND knowledge.length >= gaps.length * 0.7:
-          * STOP: "达到阅读量目标且大部分问题已解决"
+          * STOP: "reached reading target and most questions resolved"
       - IF iteration >= MAX_ITERATIONS:
-          * STOP: "达到最大迭代次数"
+          * STOP: "reached max iterations"
 
   17. Increment
       - iteration++
@@ -172,11 +177,11 @@ END LOOP
   * Trigger "expansion mode":
     - Broaden search queries (add synonyms)
     - Lower paper filtering threshold
-    - Force dfs_search on all High papers
+    - Force paper_reference on all High papers
 
 ### Diary Length Control
 - Keep detailed logs for last 5 iterations only
-- Compress earlier iterations into summary: "第 1-3 轮: 累计搜索 X 次，阅读 Y 篇，发现 Z 个问题"
+- Compress earlier iterations into summary: "Rounds 1-3: cumulative X searches, Y papers read, Z questions discovered"
 
 ## Output Format
 
@@ -185,46 +190,46 @@ After loop terminates, produce:
 ```markdown
 ## Literature Survey: [topic]
 
-### 执行摘要
-- 总迭代轮数: {iteration}
-- 总阅读论文数: {papersRead.size}
-- 初始问题数: 3
-- 最终解决问题数: {knowledge.length}
-- 未解决问题: {gaps}
-- 停止原因: [gaps 清空 / 无新发现 / 达到阅读量 / 达到上限]
+### Executive Summary
+- Total iteration rounds: {iteration}
+- Total papers read: {papersRead.size}
+- Initial question count: 3
+- Final resolved question count: {knowledge.length}
+- Unresolved questions: {gaps}
+- Stop reason: [gaps cleared / no new findings / reached reading target / reached limit]
 
-### 领域全景
+### Domain Landscape
 [Based on knowledge: 2-3 paragraphs synthesizing the field landscape]
 
-### 研究发现
+### Research Findings
 [For each item in knowledge:]
 #### {question}
-- **答案**: {answer}
-- **支撑来源**: {sources}
-- **置信度**: {confidence}
+- **Answer**: {answer}
+- **Supporting sources**: {sources}
+- **Confidence**: {confidence}
 
-### 已读论文 (按评级分组)
-#### High Priority (X 篇)
+### Papers Read (grouped by rating)
+#### High Priority (X papers)
 - [Title] (Year, Citations, Venue)
-  - 关键贡献: ...
+  - Key contributions: ...
 
-#### Medium Priority (Y 篇)
+#### Medium Priority (Y papers)
 - [Title] (Year, Citations, Venue)
-  - 关键贡献: ...
+  - Key contributions: ...
 
-#### Low Priority (Z 篇)
+#### Low Priority (Z papers)
 - [Title] (Year)
 
-### 关键主题
+### Key Themes
 [Bullet list of major themes/clusters discovered]
 
-### 研究日志
+### Research Diary
 {diary[0]}
 {diary[1]}
 ...
 [Compressed summary of early iterations if > 5 iterations]
 
-### 未解决问题
+### Unresolved Questions
 [List remaining gaps with explanation of why they couldn't be answered]
 ```
 

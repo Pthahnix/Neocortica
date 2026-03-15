@@ -1,109 +1,96 @@
 # Neocortica — Tool Reference
 
-MCP server with 5 tools for academic research and web content retrieval. All tools cache results locally under `DIR_CACHE`.
+Research toolkit using external MCP servers for academic search, web retrieval, and GPU pod management.
 
-## Tools
+## MCP Servers & Tools
 
-### paper_content
+### neocortica-scholar (Academic Paper Pipeline)
 
-Convert a single paper to markdown. Smart routing based on input type.
+See `/neocortica-scholar` skill for detailed usage guide.
 
-| Param | Type | Description |
-| ------- | ------ | ------------- |
-| `title` | string? | Paper title (triggers title→markdown pipeline) |
-| `url` | string? | arXiv URL or PDF URL |
-| `dir` | string? | Local PDF file path |
+| Tool | Purpose |
+|------|---------|
+| `paper_searching` | Enrich Google Scholar results into PaperMeta (arXiv, SS, Unpaywall) |
+| `paper_fetching` | Fetch full paper as markdown (cache-first, multi-source fallback) |
+| `paper_content` | Read cached paper markdown (local only, no network) |
+| `paper_reference` | Get paper references via Semantic Scholar API |
+| `paper_reading` | AI three-pass reading (Keshav method) via LLM agent |
 
-Routing logic:
+### apify (Google Scholar + Web Scraping)
 
-- arXiv URL → fetch metadata by ID + convert via arxiv2md.org
-- PDF URL or local path → convert via MinerU
-- Title only → fallback chain: arXiv search → Semantic Scholar → Unpaywall OA PDF → MinerU
+| Tool | Purpose |
+|------|---------|
+| `marco.gullo/google-scholar-scraper` | Search Google Scholar, returns raw results |
+| `apify/rag-web-browser` | Fetch web page as markdown |
 
-Returns `PaperResult` with `markdownDir` pointing to cached full-text.
+### brave-search (Web Search)
 
-### acd_search
+| Tool | Purpose |
+|------|---------|
+| `brave_web_search` | Web search via Brave Search API |
 
-Broad academic search. Queries Google Scholar, fetches full text for each result.
+### runpod (GPU Pod Lifecycle)
 
-| Param | Type | Description |
-| ------- | ------ | ------------- |
-| `query` | string | Search keywords for Google Scholar |
+| Tool | Purpose |
+|------|---------|
+| `create-pod` | Create GPU pod |
+| `start-pod` / `stop-pod` / `delete-pod` | Pod lifecycle management |
+| `list-pods` / `get-pod` | Pod status queries |
 
-Pipeline: Google Scholar (via Apify) → for each paper, attempt arXiv content → fallback to title2markdown pipeline. Processes in batches of 3.
+## Academic Search Pipeline
 
-Returns `PaperResult[]` — each with metadata and `markdownDir` where content was obtained.
+```
+google-scholar-scraper → paper_searching → paper_fetching → paper_content
+                                                           → paper_reference
+                                                           → paper_reading
+```
 
-### dfs_search
+1. **Search**: `google-scholar-scraper` × N queries (parallel)
+2. **Enrich**: `paper_searching` per result (sequential, avoid rate limits)
+3. **Fetch**: `paper_fetching` for those with arxivUrl/oaPdfUrl (sequential)
+4. **Read**: `paper_content` for cached text, or `paper_reading` for AI analysis
 
-Deep reference exploration. Follows a paper's references recursively via Semantic Scholar.
+## Reference Exploration Pipeline
 
-| Param | Type | Description |
-| ------- | ------ | ------------- |
-| `title` | string | Paper title |
-| `normalizedTitle` | string | Normalized title for dedup |
-| `s2Id` | string? | Semantic Scholar paper ID (looked up if omitted) |
-| `depth` | number | Max recursion depth |
-| `breadth` | number | Max references per level |
-| `visited` | string[]? | Already visited normalizedTitles |
+```
+paper_reference → paper_searching → paper_fetching
+```
 
-Returns flat `PaperResult[]` of all discovered papers across all depth levels.
-
-### web_search
-
-Search the web via Brave Search API. Returns result list without content.
-
-| Param | Type | Description |
-| ------- | ------ | ------------- |
-| `query` | string | Search query |
-| `count` | number? | Max results (default 10) |
-
-Returns `WebResult[]` with `title`, `url`, `description`. Use `web_content` to fetch full page markdown.
-
-### web_content
-
-Fetch a web page and convert to markdown. Caches locally.
-
-| Param | Type | Description |
-| ------- | ------ | ------------- |
-| `url` | string | URL to fetch |
-| `title` | string? | Page title (derived from URL if omitted) |
-
-Returns `WebResult` with `markdownDir` pointing to cached markdown file.
+1. **References**: `paper_reference` returns PaperMeta[] (SS basic info only)
+2. **Enrich**: `paper_searching` per reference (fills arxivUrl/oaPdfUrl/abstract)
+3. **Fetch**: `paper_fetching` for enriched references with OA sources
 
 ## Data Types
 
 ```typescript
-PaperResult {
-  title, normalizedTitle,
-  arxivId?, doi?, s2Id?,
-  year?, authors?, abstract?, citationCount?,
-  arxivUrl?, pdfUrl?, sourceUrl?,
-  markdownDir?  // path to cached full-text markdown
+PaperMeta {
+  title, normalizedTitle,        // required
+  arxivId?, doi?, s2Id?,         // identifiers
+  abstract?, arxivUrl?, oaPdfUrl?, pdfPath?,  // metadata
+  year?, authors?, citationCount?, sourceUrl?,
+  markdownPath?                  // path to cached full-text markdown
 }
 
-WebResult {
-  title, normalizedTitle, url,
-  description?,
-  markdownDir?  // path to cached page markdown
+ScholarItem {
+  title?, link?, authors?, year?,
+  citations?, searchMatch?, documentLink?
 }
 ```
 
-## Cache Structure
+## Cache
 
-- `DIR_CACHE/markdown/` — paper full-text (.md)
-- `DIR_CACHE/paper/` — paper metadata (.json)
-- `DIR_CACHE/web/` — web page content (.md)
+Managed by neocortica-scholar via `NEOCORTICA_CACHE` env var:
+- `markdown/` — paper full-text (.md)
+- `paper/` — paper metadata (.json)
 
-Filenames are normalized: lowercase, non-alphanumeric → `_`, no trailing `_`.
+Filenames normalized: lowercase, non-alphanumeric → `_`, no trailing `_`.
 
 ## Tool Usage in Iterative Loop Engine
 
-All research skills (literature-survey, gap-analysis, idea-generation, experiment-design) use only the 5 free tools above. The iterative loop engine achieves comprehensive research through:
+All research skills use the same search pattern per iteration:
 
-- **Parallel searches**: 6 searches per iteration (3 queries × 2 tools)
+- **Parallel searches**: `google-scholar-scraper` × 3 + `brave_web_search` × 3 = 6 searches
+- **Sequential enrichment**: Scholar results → `paper_searching` → `paper_fetching`
 - **Iterative refinement**: SEARCH→READ→REFLECT→EVALUATE cycle
 - **Autonomous gap discovery**: System identifies missing information and searches again
 - **Dynamic stopping**: Continues until knowledge is sufficient, not fixed iteration count
-
-**No external validation tools needed** — quality control is built into the loop through self-reflection and evaluation.

@@ -13,7 +13,7 @@ Identify research gaps using iterative loop engine. This is Stage 2 of the resea
 
 - Completed literature survey with rated and read papers
 - Prompts: `prompt/gap-discovery.md`, `prompt/reflect-gaps.md`, `prompt/evaluate-answer.md`
-- Tools: acd_search, web_search, dfs_search, paper_content
+- Tools: google-scholar-scraper (Apify), paper_searching, paper_fetching, paper_content, paper_reference, brave_web_search
 
 ## Overview
 
@@ -37,9 +37,9 @@ identifiedGaps: Gap[]       // Validated research gaps
 
 ```typescript
 gaps = [
-  "现有方法的主要局限性是什么？",
-  "哪些应用场景尚未被充分研究？",
-  "理论与实践之间的差距在哪里？"
+  "What are the main limitations of existing methods?",
+  "Which application scenarios are underexplored?",
+  "Where are the gaps between theory and practice?"
 ]
 knowledge = [...] // Inherited from Stage 1
 papersRead = Set(...) // Inherited from Stage 1
@@ -71,16 +71,20 @@ WHILE (gaps.length > 0 AND iteration < MAX_ITERATIONS):
        * Practical query: "real-world deployment practical challenges [topic]"
 
   2. Parallel Search
-     - acd_search × 3 (one per query)
-     - web_search × 3 (one per query, target: GitHub issues, workshop papers, blog posts discussing limitations)
+     - google-scholar-scraper × 3 (one per query)
+     - brave_web_search × 3 (one per query, target: GitHub issues, workshop papers, blog posts discussing limitations)
      - Total: 6 searches in parallel
 
-  3. Deduplication
+  3. Enrich & Fetch
+     - For Scholar results: paper_searching per result (sequential)
+     - For those with arxivUrl/oaPdfUrl: paper_fetching (sequential)
+
+  4. Deduplication
      - Filter out papers in papersRead
      - Keep only new papers
 
   4. Log to diary
-     - "第 {iteration+1} 轮 SEARCH: 针对'{currentGap}'，执行了 6 次搜索，找到 X 篇新论文"
+     - "Round {iteration+1} SEARCH: targeting '{currentGap}', executed 6 searches, found X new papers"
 
   // ===== READ Phase =====
   5. Priority Ranking
@@ -98,14 +102,15 @@ WHILE (gaps.length > 0 AND iteration < MAX_ITERATIONS):
 
   7. Reference Expansion (conditional)
      - IF any High-rated paper found AND papersRead.size < MIN_PAPERS_TARGET:
-       * dfs_search(depth=1, breadth=5) on papers that explicitly discuss limitations
+       * paper_reference on papers that explicitly discuss limitations
+       * paper_searching → paper_fetching on discovered references
        * Add discovered papers to search results for next iteration
 
   8. Update State
      - papersRead.add(all read papers' normalizedTitle)
 
   9. Log to diary
-     - "第 {iteration+1} 轮 READ: 阅读了 K 篇论文，累计已读 {papersRead.size} 篇，重点关注 Limitations/Future Work 章节"
+     - "Round {iteration+1} READ: read K papers, total read {papersRead.size}, focusing on Limitations/Future Work sections"
 
   // ===== REFLECT Phase =====
   10. Gap Discovery
@@ -127,14 +132,14 @@ WHILE (gaps.length > 0 AND iteration < MAX_ITERATIONS):
           * noProgressCount++
 
   12. Log to diary
-      - "第 {iteration+1} 轮 REFLECT: {progressAssessment}，发现 {newGaps.length} 个新的潜在空白"
+      - "Round {iteration+1} REFLECT: {progressAssessment}, discovered {newGaps.length} new potential blanks"
 
   // ===== EVALUATE Phase =====
   13. Gap Validation
       - Load prompt/evaluate-answer.md
       - Input: currentGap, knowledge, readContent
       - Output: { canAnswer: bool, answer: string, sources: string[], confidence: string, missingInfo: string }
-      - Question format: "基于已读论文，'{currentGap}' 是否是一个真实存在的研究空白？"
+      - Question format: "Based on papers read, is '{currentGap}' a genuine research gap?"
 
   14. Update Identified Gaps
       - IF canAnswer == true AND answer confirms it's a real gap:
@@ -150,19 +155,19 @@ WHILE (gaps.length > 0 AND iteration < MAX_ITERATIONS):
           * Keep currentGap in queue for more investigation
 
   15. Log to diary
-      - IF gap confirmed: "第 {iteration+1} 轮 EVALUATE: 确认'{currentGap}'是真实研究空白（置信度: {confidence}）"
-      - ELSE: "第 {iteration+1} 轮 EVALUATE: '{currentGap}'需要更多证据，原因: {missingInfo}"
+      - IF gap confirmed: "Round {iteration+1} EVALUATE: confirmed '{currentGap}' as genuine research gap (confidence: {confidence})"
+      - ELSE: "Round {iteration+1} EVALUATE: '{currentGap}' needs more evidence, reason: {missingInfo}"
 
   // ===== Stop Condition Check =====
   16. Check Termination
       - IF gaps.length == 0:
-          * STOP: "所有潜在空白已验证"
+          * STOP: "all potential blanks validated"
       - IF noProgressCount >= NO_PROGRESS_THRESHOLD:
-          * STOP: "连续 3 轮无新发现"
+          * STOP: "no new findings for 3 consecutive rounds"
       - IF identifiedGaps.length >= 5 AND papersRead.size >= MIN_PAPERS_TARGET:
-          * STOP: "已识别足够数量的研究空白"
+          * STOP: "identified sufficient research gaps"
       - IF iteration >= MAX_ITERATIONS:
-          * STOP: "达到最大迭代次数"
+          * STOP: "reached maximum iteration count"
 
   17. Increment
       - iteration++
@@ -198,7 +203,7 @@ score = feasibility_score × 0.4 + impact_score × 0.4 + novelty_score × 0.2
   * Trigger "deep dive mode":
     - Focus on Limitations/Future Work sections exclusively
     - Lower confidence threshold for gap identification
-    - Force dfs_search on all papers discussing limitations
+    - Force paper_reference on all papers discussing limitations
 
 ## Output Format
 
@@ -207,13 +212,13 @@ After loop terminates and ranking complete, produce:
 ```markdown
 ## Gap Analysis: [topic]
 
-### 执行摘要
-- 总迭代轮数: {iteration}
-- 总阅读论文数: {papersRead.size} (含 Stage 1)
-- 初始问题数: 3
-- 识别的研究空白数: {identifiedGaps.length}
-- 未验证问题: {gaps}
-- 停止原因: [gaps 清空 / 无新发现 / 达到目标 / 达到上限]
+### Executive Summary
+- Total iteration rounds: {iteration}
+- Total papers read: {papersRead.size} (including Stage 1)
+- Initial questions: 3
+- Identified research gaps: {identifiedGaps.length}
+- Unvalidated questions: {gaps}
+- Stop reason: [gaps cleared / no new findings / target reached / limit reached]
 
 ### Method Comparison Matrix
 [Synthesized from gap-discovery prompt output across all iterations]
@@ -224,25 +229,25 @@ After loop terminates and ranking complete, produce:
 ### Research Gaps (ranked by score)
 
 #### Gap 1: [title]
-- **类型**: [contradiction / blank / limitation / trend]
-- **描述**: {description}
-- **证据**: {evidence sources}
-- **可行性**: [high/medium/low + 理由]
-- **潜在影响**: [high/medium/low + 理由]
-- **新颖性**: [high/medium/low + 理由]
-- **置信度**: {confidence}
+- **Type**: [contradiction / blank / limitation / trend]
+- **Description**: {description}
+- **Evidence**: {evidence sources}
+- **Feasibility**: [high/medium/low + rationale]
+- **Potential impact**: [high/medium/low + rationale]
+- **Novelty**: [high/medium/low + rationale]
+- **Confidence**: {confidence}
 
 #### Gap 2: ...
 
 ### Field Trends
 [Where the field is heading, what's gaining/losing traction - synthesized from all iterations]
 
-### 研究日志
+### Research Diary
 {diary[0]}
 {diary[1]}
 ...
 
-### 未验证问题
+### Unvalidated Questions
 [List remaining gaps with explanation of why they couldn't be validated]
 ```
 
