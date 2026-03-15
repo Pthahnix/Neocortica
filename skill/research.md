@@ -25,13 +25,15 @@ If unclear, default to **quick** and escalate if results are insufficient.
 Goal: Answer a specific question or retrieve a specific paper quickly.
 
 1. If user provides a paper title/URL → `paper_fetching` directly
-2. If user asks a question about a known topic → `google-scholar-scraper` with focused query → `paper_searching` → `paper_fetching`, read the most relevant 1-3
-3. Rate each paper: **high** (directly answers the question), **medium** (provides context), **low** (tangential)
+2. If user asks a question about a known topic:
+   - Execute acd-searching pipeline with 1 focused query, papersRead=Set()
+   - Read the most relevant 1-3 papers from results
+3. Rate each paper: **high** (directly answers), **medium** (context), **low** (tangential)
 4. Summarize findings, cite sources with paper titles
 
 Decision points:
 
-- If Scholar returns nothing useful → try `brave_web_search` as fallback
+- If Scholar returns nothing useful → execute web-searching pipeline as fallback
 - If a paper's full text wasn't obtained (no `markdownPath`) → note it, don't block on it
 
 ## Strategy: survey
@@ -39,15 +41,11 @@ Decision points:
 Goal: Comprehensive literature review on a topic. Discover, collect, and organize papers.
 
 1. Analyze topic breadth and craft 1-3 search queries (rephrase for coverage)
-2. For each query → `google-scholar-scraper` → `paper_searching` per result → `paper_fetching` for those with OA sources
-3. Deduplicate by `normalizedTitle` across all queries
-4. Read via `paper_content` or `paper_reading` for AI-assisted analysis
-5. Rate each paper:
-   - **high**: core contribution to the topic, must-read
-   - **medium**: relevant, provides useful context or technique
-   - **low**: tangential or redundant
-6. For **high** papers with interesting references → `paper_reference` → `paper_searching` → `paper_fetching` to find missed work
-7. Present results grouped by rating, with summary per paper
+2. Execute acd-searching pipeline with queries, papersRead=Set()
+3. Read via `paper_content` or `paper_reading` for AI-assisted analysis
+4. Rate each paper: **high** / **medium** / **low**
+5. For **high** papers with interesting references → `paper_reference` → enrich and fetch discovered references via acd-searching pipeline
+6. Present results grouped by rating, with summary per paper
 
 Decision points:
 
@@ -63,7 +61,7 @@ Goal: Trace a paper's reference tree to understand its intellectual context.
 1. Start with seed paper → `paper_fetching` to get full text and metadata
 2. Read the paper, identify its key contributions and most-cited references
 3. `paper_reference` on the seed paper to get its reference list
-4. Enrich interesting references: `paper_searching` → `paper_fetching`
+4. Enrich interesting references via acd-searching pipeline (pass reference titles as queries)
 5. From results, identify clusters/themes in the references
 6. Rate discovered papers by relevance to the original research question
 7. Optionally: for the most important discovered papers, run another `paper_reference` to go deeper
@@ -78,16 +76,15 @@ Decision points:
 
 Goal: Gather non-academic information — blog posts, documentation, tutorials, news.
 
-1. `brave_web_search` with the user's query (adjust count based on expected breadth)
-2. Skim results — pick the most relevant URLs
-3. `rag-web-browser` (via Apify) on each selected URL to get full markdown
-4. Read and synthesize across sources
-5. Present findings with source URLs
+1. Execute web-searching pipeline with user's query, urlsVisited=Set()
+2. Read fetched pages — for those with markdownPath, read and synthesize
+3. For results without markdownPath (fetchFailed), use Brave snippets
+4. Present findings with source URLs
 
 Decision points:
 
-- If search results are low quality → rephrase query, try adding "tutorial", "guide", "explained", site-specific terms
-- If a page's content is thin → try the next result instead of dwelling on it
+- If search results are low quality → rephrase query, add "tutorial", "guide", "explained"
+- If a page's content is thin → try the next result
 - If the topic has academic depth too → suggest escalating to **hybrid**
 
 ## Strategy: hybrid
@@ -95,9 +92,9 @@ Decision points:
 Goal: Complex research question requiring both academic papers and web sources.
 
 1. Decompose the question into sub-questions
-2. For each sub-question, decide: academic (`google-scholar-scraper` pipeline) or web (`brave_web_search`)
-   - Theoretical foundations, algorithms, benchmarks → academic
-   - Implementation details, tooling, recent developments → web
+2. For each sub-question, decide: academic or web
+   - Theoretical foundations, algorithms, benchmarks → execute acd-searching pipeline
+   - Implementation details, tooling, recent developments → execute web-searching pipeline
 3. Execute searches, collect and read sources
 4. Cross-reference: do web sources cite papers you found? Do papers reference tools/frameworks from web results?
 5. Synthesize a unified answer drawing from both source types
