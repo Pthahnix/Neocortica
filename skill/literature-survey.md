@@ -8,7 +8,8 @@ $ARGUMENTS — research topic or question
 
 ## Prerequisites
 
-- Neocortica-Scholar MCP (paper_searching, paper_fetching, paper_content, paper_reference, paper_reading) + Brave Search MCP (brave_web_search) + Apify MCP (marco.gullo/google-scholar-scraper, apify/rag-web-browser)
+- Pipelines: `pipeline/acd-searching.md`, `pipeline/web-searching.md`
+- Tools (direct): paper_content, paper_reference, paper_reading (neocortica-scholar)
 - Prompts: `prompt/paper-rating.md`, `prompt/paper-reading.md`, `prompt/reflect-gaps.md`, `prompt/evaluate-answer.md`
 
 ## Overview
@@ -26,7 +27,7 @@ diary: string[]             // Narrative log of each iteration
 iteration: number           // Current iteration count
 noProgressCount: number     // Consecutive iterations without new findings
 papersRead: Set<string>     // normalizedTitle of papers already read
-```
+urlsVisited: Set<string>    // URLs of web pages already fetched
 
 ## Initial State
 
@@ -38,6 +39,7 @@ gaps = [
 ]
 knowledge = []
 papersRead = Set()
+urlsVisited = Set()
 iteration = 0
 noProgressCount = 0
 diary = []
@@ -64,21 +66,21 @@ WHILE (gaps.length > 0 AND iteration < MAX_ITERATIONS):
        * Technical query (specific): key methods/techniques
        * Application query (context): use cases/scenarios
 
-  2. Parallel Search
-     - google-scholar-scraper × 3 (one per query)
-     - brave_web_search × 3 (one per query)
-     - Total: 6 searches in parallel
+  2. Execute acd-searching pipeline
+     - Input: queries (3 from step 1), papersRead
+     - Output: PaperMeta[] (enriched, with markdownPath for fetched papers)
 
-  3. Enrich & Fetch
-     - For Scholar results: paper_searching per result (sequential, avoid rate limits)
-     - For those with arxivUrl/oaPdfUrl: paper_fetching (sequential)
+  3. Execute web-searching pipeline
+     - Input: queries (3 from step 1), maxResultsPerQuery=3, urlsVisited
+     - Output: WebMeta[] (with markdownPath for extracted pages)
 
-  4. Deduplication
-     - Filter out papers in papersRead
-     - Keep only new papers
+  4. Merge & Deduplication
+     - Keep PaperMeta[] and WebMeta[] as separate collections
+     - Filter out papers/pages already in papersRead/urlsVisited
+     - Add new URLs to urlsVisited
 
-  4. Log to diary
-     - "Round {iteration+1} SEARCH: targeting question '{currentGap}', executed 6 searches, found X new papers"
+  5. Log to diary
+     - "Round {iteration+1} SEARCH: targeting question '{currentGap}', found X new papers + Y new web pages"
 
   // ===== READ Phase =====
   5. Priority Ranking
@@ -96,6 +98,12 @@ WHILE (gaps.length > 0 AND iteration < MAX_ITERATIONS):
        * Medium: Pass 1 → Pass 2
        * Low: Pass 1 only
      - Extract segments relevant to currentGap
+
+  6b. Read Web Pages (if any)
+      - For each WebMeta with markdownPath:
+        * Read content, extract segments relevant to currentGap
+        * Rate: High (directly relevant) / Medium (provides context) / Low (tangential)
+      - Web pages do not go through three-pass reading — summarize key points
 
   7. Reference Expansion (conditional)
      - IF any High-rated paper found AND papersRead.size < MIN_PAPERS_TARGET:
