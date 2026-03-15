@@ -21,7 +21,7 @@ Most academic AI tools only read abstracts to triage papers. Neocortica download
 
 Multi-MCP architecture: research skills orchestrate external MCP servers for academic search, web search, and GPU execution. The Supervisor HTTP service handles remote experiment dispatch.
 
-## Research Pipeline (v0.8.0)
+## Research Pipeline (v1.0.0)
 
 Five-stage iterative pipeline: Topic → Literature Survey → Gap Analysis → Idea Generation → Experiment Design → Experiment Execution
 
