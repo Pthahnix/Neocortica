@@ -12,20 +12,20 @@ Vibe researching toolkit — AI-powered academic research automation, from liter
 - Convert arXiv papers, PDFs, and web pages to AI-readable markdown
 - Web search via Brave Search API for non-academic sources
 - Full-text caching for offline access and repeated queries
-- GPU experiment execution via RunPod with Supervisor HTTP service (pod provisioning, remote training, result retrieval)
+- GPU experiment execution on remote pods via session sharing (export session → transfer → resume on GPU pod)
 - Five-stage research pipeline: survey → gaps → ideas → design → execution
 
 ## How It Works
 
 Most academic AI tools only read abstracts to triage papers. Neocortica downloads the full paper text, converts it to markdown, and lets AI evaluate based on complete methodology, experiments, and discussion.
 
-Multi-MCP architecture: research skills orchestrate external MCP servers for academic search, web search, and GPU execution. The Supervisor HTTP service handles remote experiment dispatch.
+Multi-MCP architecture: research skills orchestrate external MCP servers for academic search, web search, and GPU execution. Stage 5 uses session sharing to hand off full research context to remote GPU pods.
 
 ## Research Pipeline
 
 Five-stage iterative pipeline: Topic → Literature Survey → Gap Analysis → Idea Generation → Experiment Design → Experiment Execution
 
-Each stage (1–4) uses SEARCH→READ→REFLECT→EVALUATE cycles with autonomous gap discovery and dynamic stopping conditions. Stage 5 dispatches the experiment to a GPU pod via the Supervisor HTTP service.
+Each stage (1–4) uses SEARCH→READ→REFLECT→EVALUATE cycles with autonomous gap discovery and dynamic stopping conditions. Stage 5 exports the full session (with all accumulated research context) to a remote GPU pod via session sharing, where it resumes and executes the experiment autonomously.
 
 **Key Features**:
 
@@ -36,8 +36,8 @@ Each stage (1–4) uses SEARCH→READ→REFLECT→EVALUATE cycles with autonomou
 - State inheritance between stages (knowledge + papersRead + urlsVisited)
 - Zero external validation cost
 - Dynamic stopping: gaps cleared, no progress for 3 rounds, or target reached
-- Supervisor-mediated experiment execution: local CC → HTTP API → remote CC on RunPod pod
-- Checkpoint-based phase control with continue/revise/abort feedback
+- Session sharing for experiment execution: export full research context → transfer to GPU pod → resume
+- Checkpoint-based phase control via round-trip session export/import
 
 ## Prerequisites
 
@@ -167,23 +167,35 @@ MCP Client (Claude Code — local)
     │
     ├── @runpod/mcp-server ─── GPU pod lifecycle
     │
-    └── Supervisor (src/supervisor/) ─── HTTP service on RunPod pod
-            ├── POST /task ──→ write task file → spawn remote CC
-            ├── GET  /task/:id/status ──→ poll execution state
-            ├── GET  /task/:id/report ──→ fetch checkpoint reports
-            ├── POST /task/:id/feedback ──→ continue/revise/abort
-            └── GET  /task/:id/files/*path ──→ download results
+    └── Session Sharing ─── distributed experiment execution
+            ├── Export session (full Stages 1-4 context)
+            ├── Transfer to RunPod GPU pod
+            ├── Resume on remote CC (with all research knowledge)
+            └── Export results back on completion
 ```
 
 ## Roadmap
 
-### Transport MCP — Remote Agent Communication
+### Session Sharing — Distributed Experiment Execution
 
-The next major milestone is a **Transport MCP Server** that enables local Claude Code to spawn and communicate with remote Claude Code instances running on RunPod GPU pods. This replaces the current Supervisor HTTP polling model with a real-time, bidirectional messaging layer powered by RabbitMQ.
+**Strategic pivot** (2026-03-16): replacing the custom HTTP relay protocol with session sharing for Stage 5 experiment execution.
 
-The goal: your local Claude Code acts as a team leader, dispatching experiment tasks to remote GPU workers through familiar agent-to-agent APIs (`spawn_teammate`, `send_message`, `read_inbox`). The transport layer handles all the networking transparently — local and remote agents communicate as if they were on the same machine.
+The key insight: Claude Code's native work unit is the **session**. Instead of building a custom protocol that spawns a fresh CC process and loses all context, we export the full session — including all knowledge accumulated across Stages 1-4 — and resume it on a remote GPU pod. The remote CC "remembers everything" and executes the experiment with full research context.
 
-This unlocks the full Stage 5 (Experiment Execution) of the research pipeline: automated GPU provisioning, remote code implementation, training runs, and result collection — all orchestrated from your local environment with human-in-the-loop checkpoints at critical phases.
+Inspired by [cc-go-on](https://github.com/Johnixr/cc-go-on) (session export/encrypt/share/resume for AI coding assistants).
+
+**Flow**:
+```
+Local CC (Stages 1-4 complete)
+    → Export session (tar.gz + encrypt)
+    → Transfer to RunPod GPU pod
+    → Remote CC imports + resumes with full context
+    → Executes experiment autonomously
+    → Exports results session back
+    → Local CC imports results
+```
+
+This approach reduces code complexity by 90%+, preserves full research context, and aligns with CC's native architecture rather than fighting it.
 
 ## License
 
