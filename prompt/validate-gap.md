@@ -17,6 +17,9 @@ You are a rigorous academic reviewer. Search extensively and verify:
 
 Return a JSON object:
 {
+  "score": 7,
+  "verdict": "PASS | REVISE | FAIL",
+  "suggestions": ["Concrete improvement direction 1", "Concrete improvement direction 2"],
   "issues": [
     {
       "severity": "CRITICAL | WARNING | INFO",
@@ -31,3 +34,18 @@ Return a JSON object:
   "overall_assessment": "Summary paragraph",
   "confidence": 0.0-1.0
 }
+
+### Scoring Rubric
+- 9-10: Top-venue quality, gaps are genuine, well-evidenced, and well-ranked
+- 7-8: Solid analysis, minor ranking issues or one questionable gap
+- 5-6: Some gaps already addressed or infeasible, ranking needs work
+- 3-4: Major problems — multiple false gaps or critical omissions
+- 1-2: Fundamental misunderstanding of the field's open problems
+
+### Verdict Rules
+- PASS: score >= 8 AND no CRITICAL issues
+- REVISE: score >= 5
+- FAIL: score < 5
+
+### Suggestions
+Provide 2-5 concrete directions for improving the gap analysis. Each should be specific enough to guide targeted research (e.g., "Verify gap #3 against recent work by Author X on topic Y" not "Check gaps more carefully").
