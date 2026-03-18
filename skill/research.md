@@ -136,10 +136,19 @@ After completing any strategy, present:
 
 ## Advanced: Research Pipeline
 
-For full scientific research workflows (topic → idea), use the five-stage pipeline instead of the strategies above. See `skill/neocortica.md` for the overview, or invoke each stage directly:
+For full scientific research workflows (topic → idea → experiment), use the research pipeline with review-driven iteration:
 
-1. `skill/literature-survey.md` — structured literature survey with three-pass reading
-2. `skill/gap-analysis.md` — cross-paper gap discovery
-3. `skill/idea-generation.md` — idea generation and scoring
-4. `skill/experiment-design.md` — experiment plan (skeleton)
-5. `skill/experiment-execution.md` — remote GPU experiment execution
+**Recommended entry point:** `skill/research-loop.md` — encapsulates Stages 1-3 with iterative review. Runs survey → gap → idea → review → selective redo until quality threshold is met.
+
+**Full pipeline:**
+1. `skill/research-loop.md` — Stages 1-3 with review loop (survey + gap + idea + review)
+2. `skill/experiment-design.md` — Stage 4: experiment plan (skeleton)
+3. `skill/experiment-execution.md` — Stage 5: remote GPU experiment execution
+
+**Individual stage skills** (for one-off use outside the review loop):
+- `skill/literature-survey.md` — structured literature survey with three-pass reading
+- `skill/gap-analysis.md` — cross-paper gap discovery
+- `skill/idea-generation.md` — idea generation and scoring
+
+**Review only** (for ad-hoc review of existing outputs):
+- `skill/research-review.md` — single-shot review via independent CC process
