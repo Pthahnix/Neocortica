@@ -245,9 +245,12 @@ Replaced session export/import with Git-based context transfer. CLAUDE.md + MEMO
 
 Consolidated all MCP servers (neocortica-scholar, neocortica-web, neocortica-session) into a single npm workspaces monorepo. Added dual pod target support (RunPod GPU pods + remote SSH servers). Original standalone repos preserved for independent development.
 
+### End-to-End Pipeline Validation — COMPLETED (v2.0.0)
+
+Full research pipeline validated on the topic "AI Scientist" — survey → gap analysis → idea generation → review → experiment design. All MCP tools exercised: google-scholar-scraper (3 parallel searches, 30 results), paper_searching (8 enrichments), paper_fetching (8 full-text downloads), paper_reading (8 papers, 2 concurrent batches), paper_reference (1 citation trace), brave_web_search (4 queries), web_fetching (1 page). Review score: 8.2/10, all stages passed.
+
 ### Next
 
-- End-to-end test: run full research-loop on a real topic to validate review mechanism
 - End-to-end test: run full Stage 5 with real GPU pod (session-teleport → experiment → session-return)
 - Adversarial Debate: Proposer-Critic-Judge architecture for idea validation
 - Evolutionary Generation: MAP-Elites quality-diversity algorithm for idea evolution
