@@ -6,7 +6,7 @@ Orchestrates deploying a CC research context to a remote GPU pod (RunPod or user
 
 - RunPod MCP server configured (if using RunPod)
 - Experiment repo on GitHub (public or private)
-- `.mcp.json` with `session-credentials` entry containing: ANTHROPIC_BASE_URL, ANTHROPIC_AUTH_TOKEN, ANTHROPIC_MODEL, GITHUB_PAT, HF_TOKEN
+- `.mcp.json` with `neocortica-session` entry containing: ANTHROPIC_BASE_URL, ANTHROPIC_AUTH_TOKEN, ANTHROPIC_MODEL, GITHUB_PAT, HF_TOKEN
 - Repo remote URL must be HTTPS format (e.g., `https://github.com/user/repo.git`) — PAT auth requires HTTPS, not SSH
 
 ## Phase 0: Pod Selection
@@ -82,7 +82,7 @@ Shared between both pod types.
 
 Shared between both pod types. SSH into the pod and detect what's present, then execute only what's needed.
 
-**Credential source**: Read `.mcp.json` and extract ANTHROPIC_BASE_URL, ANTHROPIC_AUTH_TOKEN, ANTHROPIC_MODEL, GITHUB_PAT, HF_TOKEN from the `session-credentials` MCP server entry's `env` field.
+**Credential source**: Read `.mcp.json` and extract ANTHROPIC_BASE_URL, ANTHROPIC_AUTH_TOKEN, ANTHROPIC_MODEL, GITHUB_PAT, HF_TOKEN from the `neocortica-session` MCP server entry's `env` field.
 
 ### Step 1: Detection
 
@@ -120,7 +120,7 @@ scp -P <port> packages/session/scripts/setup-env.sh <user>@<host>:/tmp/
 ssh -p <port> <user>@<host> "bash /tmp/setup-env.sh '<BASE_URL>' '<AUTH_TOKEN>' '<MODEL>' '<HF_TOKEN>'"
 ```
 
-Read credentials from `.mcp.json` `session-credentials` entry (not `.env`).
+Read credentials from `.mcp.json` `neocortica-session` entry (not `.env`).
 
 ### Step 6: Configure bypassPermissions
 
@@ -141,7 +141,7 @@ chown -R cc:cc /home/cc/.claude"
 ssh -p <port> <user>@<host> "su - cc -c 'git config --global credential.helper store && echo \"https://<PAT>@github.com\" > /home/cc/.git-credentials'"
 ```
 
-Read PAT from `.mcp.json` `session-credentials.env.GITHUB_PAT`.
+Read PAT from `.mcp.json` `neocortica-session.env.GITHUB_PAT`.
 
 ### Step 8: Deploy context
 

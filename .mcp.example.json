@@ -48,7 +48,7 @@
         "RAILWAY_API_TOKEN": "your-railway-api-token"
       }
     },
-    "session-credentials": {
+    "neocortica-session": {
       "command": "echo",
       "args": ["credential-store-only"],
       "env": {
