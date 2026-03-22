@@ -1,5 +1,6 @@
 # Folders starting with a dot
 **.*/
+!**/.test/
 
 # Node
 node_modules/
