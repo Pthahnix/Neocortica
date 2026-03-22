@@ -1,0 +1,25 @@
+{
+  "name": "@neocortica/scholar",
+  "version": "0.2.0",
+  "description": "MCP server for academic paper searching, fetching, and reference exploration",
+  "type": "module",
+  "scripts": {
+    "mcp": "tsx src/mcp_server.ts",
+    "test": "tsx --test .test/**/*.test.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@mariozechner/pi-agent-core": "^0.57.1",
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "adm-zip": "^0.5.16",
+    "dotenv": "^17.3.1",
+    "fast-xml-parser": "^5.3.7",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/node": "^25.3.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
